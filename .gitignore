@@ -68,3 +68,9 @@ build/
 # Temporary files
 tmp/
 temp/
+
+# ML Model artifacts (large files)
+*.joblib
+*.pkl
+*.model
+model_artifacts/
