@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will It Rain?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            opacity: 0;
+            animation: pageEnter 0.8s ease-out forwards;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.05)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.05)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.05)"/></svg>');
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes pageEnter {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: slideInUp 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #f0f9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(255,255,255,0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+            to { text-shadow: 0 0 30px rgba(255,255,255,0.6); }
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr 1.5fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .card:hover::before {
+            left: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.3);
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #3f51b5;
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
+        }
+
+        .input:disabled {
+            background-color: #f9fafb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .location-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .location-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .location-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .date-picker {
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .date-picker:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+
+        .date-picker:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .date-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .date-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .date-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .calendar-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .submit-btn {
+            padding: 1.2rem 2rem;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(255, 107, 107, 0.4);
+        }
+        
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .prediction-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2rem;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 2rem;
+            animation: fadeInUp 0.6s ease-out;
+            color: white;
+            box-shadow: 0 30px 60px -12px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .prediction-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .weather-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            animation: bounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .verdict-badge {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .probability {
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            animation: countUp 1s ease-out;
+        }
+        
+        @keyframes countUp {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.75rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 0.5rem;
+            transition: width 1s ease-out;
+        }
+
+        .details {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 0.5rem;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #dc2626;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Weather Animation Effects */
+        .weather-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, transparent, #4fc3f7);
+            animation: rainfall 1s linear infinite;
+        }
+
+        @keyframes rainfall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        .snowflake {
+            position: absolute;
+            color: #fff;
+            font-size: 1rem;
+            animation: snowfall 3s linear infinite;
+        }
+
+        @keyframes snowfall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        .sun-ray {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffd54f, transparent);
+            animation: sunRays 4s ease-in-out infinite;
+        }
+
+        @keyframes sunRays {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Sector Tabs Styling */
+        .sector-tabs {
+            margin-top: 3rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: #3f51b5;
+            color: white;
+            border-color: #3f51b5;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #e5e7eb;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .sector-benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .benefit-card {
+            background: #f8fafc;
+            border-left: 4px solid #3f51b5;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .benefit-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-animation" id="weatherAnimation"></div>
+    
+    <div style="position: fixed; top: 2rem; left: 2rem; z-index: 1000;">
+        <a href="index.html" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.9); color: #667eea; text-decoration: none; border-radius: 50px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'">
+            ← Back to Home
+        </a>
+    </div>
+    
+    <div class="container">
+        <header class="header">
+            <h1>Will It Rain? 🌧️</h1>
+            <p>Sector-specific weather insights based on historical climate data analysis</p>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                <div>🏭 <strong>8</strong> Industry Sectors</div>
+                <div>📊 <strong>10-Year</strong> Climate Data</div>
+                <div>✅ <strong>Work/No Work</strong> Guidance</div>
+                <div>💡 <strong>Actionable</strong> Recommendations</div>
+            </div>
+        </header>
+
+        <div id="error" class="error hidden"></div>
+
+        <div class="main-grid">
+            <div class="card">
+                <form id="weatherForm" class="form">
+                    <div class="form-group">
+                        <label>📍 Location</label>
+                        <input type="text" id="locationInput" class="input" placeholder="Enter city name (e.g., Mumbai, New York, London)">
+                        
+                        <div style="margin-top: 0.75rem;">
+                            <label style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; display: block;">Or enter postal code:</label>
+                            <input type="text" id="pincodeInput" class="input" placeholder="Enter postal code (e.g., 400001, 10001)" style="margin-bottom: 0.75rem;">
+                        </div>
+                        
+                        <div class="location-buttons">
+                            <button type="button" class="location-btn" data-name="Mumbai">Mumbai</button>
+                            <button type="button" class="location-btn" data-name="New Delhi">Delhi</button>
+                            <button type="button" class="location-btn" data-name="New York">New York</button>
+                            <button type="button" class="location-btn" data-name="London">London</button>
+                            <button type="button" class="location-btn" data-name="Tokyo">Tokyo</button>
+                            <button type="button" class="location-btn" data-name="Singapore">Singapore</button>
+                        </div>
+                        
+                        <button type="button" id="geoBtn" style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.1); color: #667eea; border: 1px solid rgba(102,126,234,0.3); border-radius: 0.75rem; cursor: pointer; font-size: 0.9rem; margin-top: 1rem; transition: all 0.3s;" onmouseover="this.style.background='rgba(102,126,234,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                            📍 Use My Current Location
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>📅 Select Date</label>
+                        <div style="position: relative;">
+                            <input type="date" id="dateInput" class="input date-picker" required disabled style="padding-right: 3rem;">
+                            <div class="calendar-icon" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.25rem; color: #6b7280; pointer-events: none;">📅</div>
+                        </div>
+                        <div class="date-shortcuts" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;">
+                            <button type="button" class="date-btn" data-days="0">Today</button>
+                            <button type="button" class="date-btn" data-days="1">Tomorrow</button>
+                            <button type="button" class="date-btn" data-days="7">Next Week</button>
+                            <button type="button" class="date-btn" data-days="30">1 Month</button>
+                            <button type="button" class="date-btn" data-days="90">3 Months</button>
+                            <button type="button" class="date-btn" data-days="-30">Last Month</button>
+                        </div>
+                        <div id="dateHint" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; text-align: center; font-style: italic;">📊 Historical data (1 year back) • 🔮 Forecasts (3 months ahead)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Your Industry Sector (Optional)</label>
+                        <select id="mainSectorSelect" class="input">
+                            <option value="">General weather prediction</option>
+                            <option value="agriculture">🌾 Agriculture & Farming</option>
+                            <option value="logistics">🚚 Logistics & Transportation</option>
+                            <option value="construction">🏗️ Construction & Building</option>
+                            <option value="energy">⚡ Energy & Utilities</option>
+                            <option value="disaster">🚑 Emergency & Disaster Management</option>
+                            <option value="tourism">🏨 Tourism & Events</option>
+                            <option value="industrial">🏭 Industrial & Manufacturing</option>
+                            <option value="water">💧 Water Management</option>
+                        </select>
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; font-style: italic;">
+                            💡 Select your sector to get tailored recommendations on whether you can work and how to proceed
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn" class="submit-btn" disabled>
+                        🌦️ Get Weather Insights
+                    </button>
+                </form>
+
+                <div id="predictionCard" class="prediction-card hidden">
+                    <div id="weatherIcon" class="weather-icon"></div>
+                    <h2 id="locationDisplay"></h2>
+                    <p id="dateDisplay"></p>
+                    
+                    <div id="verdictBadge" class="verdict-badge"></div>
+                    
+                    <div id="probability" class="probability"></div>
+                    <p>Chance of Rain</p>
+                    
+                    <div id="confidence"></div>
+                    
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    
+                    <div id="reasoning" style="background: rgba(255, 255, 255, 0.4); border-radius: 0.75rem; padding: 1rem; margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Comprehensive Weather Analysis</h2>
+                <div id="weatherDetails" class="details">
+                    <p style="color: #6b7280; text-align: center; padding: 2rem 0; font-style: italic;">
+                        Submit a location and date to see detailed weather analysis
+                    </p>
+                </div>
+                
+                <div id="hourlyForecast" class="hidden" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: #374151;">⏰ Hourly Breakdown</h3>
+                    <div id="hourlyData" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+                
+                <div id="weatherMetrics" class="hidden" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: #374151;">🌡️ Weather Conditions</h3>
+                    <div id="metricsGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"></div>
+                </div>
+                
+                <div id="recommendations" class="hidden" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: #374151;">💡 General Recommendations</h3>
+                    <div id="recommendationsList"></div>
+                </div>
+                
+                <div id="aiRecommendations" class="hidden" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: #374151;">🤖 AI-Powered Sector Recommendations</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">Select Industry Sector:</label>
+                        <select id="sectorSelect" class="input" style="width: 100%;">
+                            <option value="">Choose a sector...</option>
+                            <option value="agriculture">🌾 Agriculture</option>
+                            <option value="logistics">🚚 Logistics & Transportation</option>
+                            <option value="construction">🏗️ Construction</option>
+                            <option value="energy">⚡ Energy & Utilities</option>
+                            <option value="disaster">🚑 Disaster Management</option>
+                            <option value="tourism">🏨 Tourism & Events</option>
+                            <option value="industrial">🏭 Industrial Operations</option>
+                            <option value="water">💧 Water Management</option>
+                        </select>
+                    </div>
+                    <button id="getAIRecommendations" class="submit-btn" style="width: 100%; margin-bottom: 1rem;" disabled>
+                        🤖 Get AI Recommendations
+                    </button>
+                    <div id="aiRecommendationsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agriculture Sector Block -->
+        <div class="card" id="agricultureBlock" style="display: none; background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+            <h2>🌾 Agriculture Weather Intelligence</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <select id="cropType" class="input">
+                    <option value="">Select crop type</option>
+                    <option value="rice">Rice</option>
+                    <option value="wheat">Wheat</option>
+                    <option value="corn">Corn</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="cotton">Cotton</option>
+                </select>
+                <button onclick="getAgricultureRecommendations()" class="submit-btn" style="background: linear-gradient(135deg, #4ade80, #22c55e);">
+                    🌱 Get Farming Insights
+                </button>
+            </div>
+            <div id="agricultureRecommendations"></div>
+        </div>
+
+        <!-- Logistics Sector Block -->
+        <div class="card" id="logisticsBlock" style="display: none; background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+            <h2>🚚 Logistics Weather Intelligence</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <input type="text" id="destination" class="input" placeholder="Destination city">
+                <select id="cargoType" class="input">
+                    <option value="">Cargo type</option>
+                    <option value="general">General Freight</option>
+                    <option value="perishable">Perishable Goods</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="chemicals">Chemicals</option>
+                </select>
+                <button onclick="getLogisticsRecommendations()" class="submit-btn" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                    🚛 Get Route Insights
+                </button>
+            </div>
+            <div id="logisticsRecommendations"></div>
+        </div>
+
+        <!-- Construction Sector Block -->
+        <div class="card" id="constructionBlock" style="display: none; background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+            <h2>🏗️ Construction Weather Planning</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                <input type="date" id="endDate" class="input">
+                <select id="workType" class="input">
+                    <option value="">Work type</option>
+                    <option value="excavation">Excavation</option>
+                    <option value="concrete">Concrete Work</option>
+                    <option value="roofing">Roofing</option>
+                    <option value="painting">Painting</option>
+                    <option value="electrical">Electrical Work</option>
+                </select>
+                <button onclick="getConstructionRecommendations()" class="submit-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    🏗️ Get Project Insights
+                </button>
+            </div>
+            <div id="constructionRecommendations"></div>
+        </div>
+
+        <!-- General Sectors Overview -->
+        <div class="card sector-tabs">
+            <h2>🏭 Other Sectors Benefiting from Weather Intelligence</h2>
+            <p style="color: #6b7280; margin-bottom: 2rem;">Weather forecasts help various industries make informed decisions and optimize their operations.</p>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showTab('energy')">⚡ Energy</button>
+                <button class="tab-btn" onclick="showTab('disaster')">🚑 Disaster Mgmt</button>
+                <button class="tab-btn" onclick="showTab('tourism')">🏨 Tourism</button>
+                <button class="tab-btn" onclick="showTab('industrial')">🏭 Industrial</button>
+                <button class="tab-btn" onclick="showTab('water')">💧 Water Mgmt</button>
+            </div>
+
+            <div id="agriculture" class="tab-content active">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">🌱 Crop Planning</div>
+                        <p>Choose optimal crops based on expected rainfall patterns and seasonal forecasts.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">💧 Irrigation Scheduling</div>
+                        <p>Plan water usage efficiently by knowing when natural rainfall will occur.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🧪 Input Management</div>
+                        <p>Time fertilizer and pesticide applications based on weather conditions.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">📈 Yield Optimization</div>
+                        <p>Maximize crop yields by aligning farming activities with weather patterns.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="logistics" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">🛣️ Route Planning</div>
+                        <p>Avoid flood-prone routes during monsoon seasons and plan alternative paths.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">📦 Goods Protection</div>
+                        <p>Ensure weather-sensitive cargo is transported during favorable conditions.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">⏰ Delivery Scheduling</div>
+                        <p>Optimize delivery schedules to avoid weather-related delays.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">💰 Cost Reduction</div>
+                        <p>Reduce transportation costs by avoiding weather-related disruptions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="construction" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏗️ Project Scheduling</div>
+                        <p>Plan outdoor construction activities during dry periods for maximum efficiency.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🌊 Flood-Proofing</div>
+                        <p>Design and implement water management systems based on rainfall forecasts.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🛠️ Resource Planning</div>
+                        <p>Allocate materials and workforce based on weather-suitable work periods.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">⚡ Safety Management</div>
+                        <p>Ensure worker safety by avoiding hazardous weather conditions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="energy" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">💧 Hydropower Planning</div>
+                        <p>Forecast water availability for hydroelectric power generation.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">☀️ Solar Optimization</div>
+                        <p>Predict cloud cover impact on solar panel efficiency and output.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">💨 Wind Energy</div>
+                        <p>Assess weather patterns affecting wind turbine performance.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">⚡ Grid Management</div>
+                        <p>Balance energy supply and demand based on weather-dependent generation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="disaster" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">🌊 Flood Preparedness</div>
+                        <p>Prepare flood management systems and evacuation plans in advance.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏥 Resource Allocation</div>
+                        <p>Pre-position relief supplies and emergency resources in vulnerable areas.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">📢 Early Warning</div>
+                        <p>Issue timely warnings to communities about potential weather hazards.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🚁 Emergency Response</div>
+                        <p>Plan rescue operations and emergency services deployment.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tourism" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">🎪 Event Planning</div>
+                        <p>Schedule outdoor events, festivals, and concerts during favorable weather.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏖️ Seasonal Tours</div>
+                        <p>Plan tourism packages and seasonal activities based on weather patterns.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">💒 Wedding Planning</div>
+                        <p>Help couples choose optimal dates for outdoor wedding ceremonies.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏃 Sports Events</div>
+                        <p>Schedule outdoor sports competitions during suitable weather conditions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="industrial" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">⛏️ Mining Operations</div>
+                        <p>Plan extraction activities around weather conditions affecting site accessibility.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🚢 Shipping Industry</div>
+                        <p>Optimize maritime routes and port operations based on weather forecasts.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏭 Manufacturing</div>
+                        <p>Adjust production schedules for weather-sensitive manufacturing processes.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🍽️ Food Processing</div>
+                        <p>Plan food processing and storage based on humidity and temperature forecasts.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="water" class="tab-content">
+                <div class="sector-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏞️ Reservoir Management</div>
+                        <p>Optimize water storage and release schedules based on rainfall predictions.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🏙️ Urban Planning</div>
+                        <p>Plan city water supply and drainage systems for expected rainfall patterns.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">🌊 Dam Operations</div>
+                        <p>Manage dam water levels and flood control measures proactively.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-title">💧 Water Conservation</div>
+                        <p>Implement water conservation strategies during predicted dry periods.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Weather Impact Calculator -->
+        <div class="card" id="impactCalculator" style="display: none; background: linear-gradient(135deg, #fef7cd, #fef3c7);">
+            <h2>💰 Weather Impact Calculator</h2>
+            <p style="color: #6b7280; margin-bottom: 1.5rem;">Calculate potential cost savings from weather-informed decisions</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">Industry</label>
+                    <select id="impactIndustry" class="input">
+                        <option value="agriculture">Agriculture</option>
+                        <option value="logistics">Logistics</option>
+                        <option value="construction">Construction</option>
+                        <option value="events">Events & Tourism</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">Project Value ($)</label>
+                    <input type="number" id="projectValue" class="input" placeholder="10000" min="100">
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">Risk Level</label>
+                    <select id="riskLevel" class="input">
+                        <option value="low">Low (5%)</option>
+                        <option value="medium">Medium (15%)</option>
+                        <option value="high">High (30%)</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: end;">
+                    <button onclick="calculateImpact()" class="submit-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 100%;">
+                        💡 Calculate Savings
+                    </button>
+                </div>
+            </div>
+            <div id="impactResults"></div>
+        </div>
+
+        <!-- Success Stories -->
+        <div class="card" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+            <h2>🏆 Success Stories</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                <div style="background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🌾</div>
+                    <h3 style="color: #15803d; margin-bottom: 0.5rem;">AgriTech Solutions</h3>
+                    <p style="color: #6b7280; margin-bottom: 1rem;">"Reduced crop losses by 40% using weather predictions for irrigation timing."</p>
+                    <div style="font-size: 0.875rem; color: #059669; font-weight: 600;">$2.3M saved annually</div>
+                </div>
+                <div style="background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🚚</div>
+                    <h3 style="color: #0369a1; margin-bottom: 0.5rem;">Global Logistics Corp</h3>
+                    <p style="color: #6b7280; margin-bottom: 1rem;">"Optimized delivery routes avoiding weather delays, improving customer satisfaction."</p>
+                    <div style="font-size: 0.875rem; color: #0284c7; font-weight: 600;">25% faster deliveries</div>
+                </div>
+                <div style="background: #ffffff; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🏗️</div>
+                    <h3 style="color: #d97706; margin-bottom: 0.5rem;">BuildSafe Construction</h3>
+                    <p style="color: #6b7280; margin-bottom: 1rem;">"Weather-informed scheduling reduced project delays and safety incidents."</p>
+                    <div style="font-size: 0.875rem; color: #d97706; font-weight: 600;">30% fewer delays</div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        let currentLocation = null;
+
+        // API Health Check on page load
+        async function checkAPIHealth() {
+            try {
+                console.log('Checking backend API health...');
+                const response = await fetch('http://localhost:3002/');
+                const data = await response.json();
+                console.log('Backend API status:', data.message);
+                
+                // Test Post Office API with a sample pincode
+                console.log('Testing Post Office API...');
+                const testResponse = await fetch('http://localhost:3002/api/geocode?postal_code=400001');
+                const testData = await testResponse.json();
+                console.log('Post Office API test result:', testData);
+                
+            } catch (error) {
+                console.error('API health check failed:', error);
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = '⚠️ Backend server not running. Please start the backend server on port 3001.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // Run health check on page load
+        window.addEventListener('load', checkAPIHealth);
+
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateInput').value = today;
+        // Remove min and max date restrictions
+
+        // Enhanced geocoding function using backend API with Google Maps integration
+        async function geocodeLocation(locationName, pincode = '', country = '') {
+            // Try postal code first if provided
+            if (pincode) {
+                try {
+                    const params = new URLSearchParams({
+                        postal_code: pincode
+                    });
+                    if (country) {
+                        params.append('country', country);
+                    }
+                    
+                    const response = await fetch(`http://localhost:3002/api/geocode?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.location) {
+                        return {
+                            lat: data.location.lat,
+                            lon: data.location.lon,
+                            name: data.location.name,
+                            details: data.location.details
+                        };
+                    }
+                } catch (error) {
+                    console.log(`Backend postal code geocoding failed: ${pincode}`);
+                }
+            }
+            
+            // Try location name if provided
+            if (locationName) {
+                try {
+                    const params = new URLSearchParams({
+                        location_name: locationName
+                    });
+                    
+                    const response = await fetch(`http://localhost:3002/api/geocode?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.location) {
+                        return {
+                            lat: data.location.lat,
+                            lon: data.location.lon,
+                            name: data.location.name,
+                            details: data.location.details
+                        };
+                    }
+                } catch (error) {
+                    console.log(`Backend location geocoding failed: ${locationName}`);
+                }
+            }
+            
+            throw new Error(`Location not found. Please check your postal code or location name.`);
+        }
+
+        // Enable/disable form fields based on location input
+        function enableDateSelection() {
+            const dateInput = document.getElementById('dateInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const dateHint = document.getElementById('dateHint');
+            const dateButtons = document.querySelectorAll('.date-btn');
+            
+            // Set realistic date constraints
+            const today = new Date();
+            const minDate = new Date(today.getTime() - (365 * 24 * 60 * 60 * 1000)); // 1 year ago
+            const maxDate = new Date(today.getTime() + (90 * 24 * 60 * 60 * 1000)); // 3 months ahead
+            
+            dateInput.min = minDate.toISOString().split('T')[0];
+            dateInput.max = maxDate.toISOString().split('T')[0];
+            dateInput.disabled = false;
+            submitBtn.disabled = false;
+            dateButtons.forEach(btn => btn.disabled = false);
+            
+            // Set default to today if no date selected
+            if (!dateInput.value) {
+                dateInput.value = today.toISOString().split('T')[0];
+                updateDateHint(today, 0);
+            }
+        }
+
+        function disableDateSelection() {
+            const dateInput = document.getElementById('dateInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const dateHint = document.getElementById('dateHint');
+            const dateButtons = document.querySelectorAll('.date-btn');
+            
+            dateInput.disabled = true;
+            dateInput.min = '';
+            dateInput.max = '';
+            submitBtn.disabled = true;
+            dateButtons.forEach(btn => btn.disabled = true);
+            dateHint.textContent = '📍 Please enter a location first to enable date selection';
+            dateHint.style.color = '#ef4444';
+        }
+
+        // Auto-fill location name when pincode is entered
+        document.getElementById('pincodeInput').addEventListener('input', async (e) => {
+            const pincode = e.target.value.trim();
+            console.log('Pincode input:', pincode);
+            
+            // Clear location if pincode is empty
+            if (pincode.length === 0) {
+                document.getElementById('locationInput').value = '';
+                disableDateSelection();
+                return;
+            }
+            
+            // Check for valid postal codes (6 digits for India, 5 digits for US, etc.)
+            const isValidPostalCode = /^\d{5,6}$/.test(pincode) || /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/.test(pincode.toUpperCase());
+            
+            if (isValidPostalCode) {
+                console.log('Valid postal code detected, fetching location...');
+                
+                // Show loading indicator
+                const locationInput = document.getElementById('locationInput');
+                const originalPlaceholder = locationInput.placeholder;
+                locationInput.placeholder = 'Loading location...';
+                locationInput.style.backgroundColor = '#f3f4f6';
+                
+                try {
+                    let url = `http://localhost:3002/api/geocode?postal_code=${encodeURIComponent(pincode)}`;
+                    
+                    console.log('Fetching from URL:', url);
+                    const response = await fetch(url);
+                    console.log('Response status:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Response data:', data);
+                        if (data.success && data.location) {
+                            locationInput.value = data.location.name;
+                            locationInput.style.backgroundColor = '#f0fdf4'; // Light green
+                            console.log('Location auto-filled:', data.location.name);
+                            enableDateSelection();
+                            showNotification(`✅ Location found: ${data.location.name}`, 'success');
+                        } else {
+                            console.log('No location found in response:', data.error || 'Unknown error');
+                            locationInput.style.backgroundColor = '#fef2f2'; // Light red
+                            showNotification('❌ Postal code not found', 'error');
+                        }
+                    } else {
+                        console.log('API request failed with status:', response.status);
+                        const errorData = await response.json().catch(() => ({}));
+                        console.log('Error details:', errorData);
+                        locationInput.style.backgroundColor = '#fef2f2';
+                        showNotification('❌ Failed to lookup postal code', 'error');
+                    }
+                } catch (error) {
+                    console.error('Auto-fill failed for pincode:', pincode, error);
+                    locationInput.style.backgroundColor = '#fef2f2';
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        showNotification('❌ Backend server not running', 'error');
+                        console.log('Backend server might not be running. Please start it with: npm run dev');
+                    } else {
+                        showNotification('❌ Network error', 'error');
+                    }
+                } finally {
+                    // Reset placeholder and remove loading state
+                    setTimeout(() => {
+                        locationInput.placeholder = originalPlaceholder;
+                        if (locationInput.style.backgroundColor !== '#f0fdf4') {
+                            locationInput.style.backgroundColor = '';
+                        }
+                    }, 2000);
+                }
+            }
+        });
+
+        function clearPreviousResults() {
+            document.getElementById('predictionCard').classList.add('hidden');
+            document.getElementById('hourlyForecast').classList.add('hidden');
+            document.getElementById('weatherMetrics').classList.add('hidden');
+            document.getElementById('recommendations').classList.add('hidden');
+            document.getElementById('aiRecommendations').classList.add('hidden');
+            document.getElementById('agricultureBlock').style.display = 'none';
+            document.getElementById('logisticsBlock').style.display = 'none';
+            document.getElementById('constructionBlock').style.display = 'none';
+            document.getElementById('impactCalculator').style.display = 'none';
+            document.getElementById('weatherAnimation').innerHTML = '';
+            currentLocation = null;
+            currentPrediction = null;
+            currentDate = null;
+        }
+
+        // Monitor location input changes
+        document.getElementById('locationInput').addEventListener('input', (e) => {
+            const location = e.target.value.trim();
+            clearPreviousResults();
+            if (location.length > 0) {
+                enableDateSelection();
+            } else {
+                const pincodeInput = document.getElementById('pincodeInput');
+                const pincode = pincodeInput ? pincodeInput.value.trim() : '';
+                if (pincode.length === 0) {
+                    disableDateSelection();
+                }
+            }
+        });
+        
+        // Monitor pincode input changes
+        document.getElementById('pincodeInput').addEventListener('input', (e) => {
+            const pincode = e.target.value.trim();
+            clearPreviousResults();
+            if (pincode.length > 0) {
+                enableDateSelection();
+            } else {
+                const locationInput = document.getElementById('locationInput');
+                const location = locationInput ? locationInput.value.trim() : '';
+                if (location.length === 0) {
+                    disableDateSelection();
+                }
+            }
+        });
+        
+
+
+        // Location button handlers
+        document.querySelectorAll('.location-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                clearPreviousResults();
+                document.getElementById('locationInput').value = btn.dataset.name;
+                document.getElementById('pincodeInput').value = '';
+                enableDateSelection();
+            });
+        });
+
+        // Date shortcut handlers
+        document.querySelectorAll('.date-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const days = parseInt(btn.dataset.days);
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() + days);
+                
+                // Check if date is within allowed range
+                const today = new Date();
+                const minDate = new Date(today.getTime() - (365 * 24 * 60 * 60 * 1000));
+                const maxDate = new Date(today.getTime() + (90 * 24 * 60 * 60 * 1000));
+                
+                if (targetDate < minDate || targetDate > maxDate) {
+                    showNotification(`⚠️ Date out of range. Please select between ${minDate.toLocaleDateString()} and ${maxDate.toLocaleDateString()}`, 'error');
+                    return;
+                }
+                
+                const dateString = targetDate.toISOString().split('T')[0];
+                document.getElementById('dateInput').value = dateString;
+                
+                // Visual feedback
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                btn.style.color = 'white';
+                setTimeout(() => {
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 200);
+                
+                // Update date hint with selected date info
+                updateDateHint(targetDate, days);
+            });
+        });
+
+        // Enhanced date input handler
+        document.getElementById('dateInput').addEventListener('change', (e) => {
+            const selectedDate = new Date(e.target.value);
+            const today = new Date();
+            const diffDays = Math.ceil((selectedDate - today) / (1000 * 60 * 60 * 24));
+            updateDateHint(selectedDate, diffDays);
+        });
+
+        function updateDateHint(date, daysDiff) {
+            const dateHint = document.getElementById('dateHint');
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            let hintText = '';
+            let hintColor = '#6b7280';
+            
+            if (daysDiff === 0) {
+                hintText = `📅 Today (${dayName}, ${dateStr}) - Current weather conditions`;
+                hintColor = '#059669';
+            } else if (daysDiff === 1) {
+                hintText = `📅 Tomorrow (${dayName}, ${dateStr}) - Next day forecast`;
+                hintColor = '#0369a1';
+            } else if (daysDiff > 1 && daysDiff <= 7) {
+                hintText = `📅 ${dayName}, ${dateStr} - ${daysDiff} days ahead forecast (High accuracy)`;
+                hintColor = '#7c3aed';
+            } else if (daysDiff > 7 && daysDiff <= 30) {
+                hintText = `📅 ${dayName}, ${dateStr} - ${daysDiff} days ahead (Medium accuracy)`;
+                hintColor = '#f59e0b';
+            } else if (daysDiff > 30) {
+                hintText = `📅 ${dayName}, ${dateStr} - ${daysDiff} days ahead (Low accuracy - seasonal trends only)`;
+                hintColor = '#dc2626';
+            } else {
+                hintText = `📅 ${dayName}, ${dateStr} - Historical weather analysis`;
+                hintColor = '#d97706';
+            }
+            
+            dateHint.textContent = hintText;
+            dateHint.style.color = hintColor;
+        }
+
+        // Geolocation handler
+        document.getElementById('geoBtn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        try {
+                            const response = await fetch(
+                                `https://api.openweathermap.org/geo/1.0/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&limit=1&appid=02a7184cb6d771ff0ab8f5f6c88f4e1d`
+                            );
+                            const data = await response.json();
+                            if (data.length > 0) {
+                                document.getElementById('locationInput').value = `${data[0].name}, ${data[0].country}`;
+                                enableDateSelection();
+                            }
+                        } catch (error) {
+                            document.getElementById('locationInput').value = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+                            enableDateSelection();
+                        }
+                    },
+                    (error) => {
+                        alert('Unable to get your location. Please enter manually.');
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        });
+        
+        // Initialize form state
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if either field has content to enable date selection
+            const locationInput = document.getElementById('locationInput').value.trim();
+            const pincodeInput = document.getElementById('pincodeInput').value.trim();
+            
+            if (locationInput.length > 0 || pincodeInput.length > 0) {
+                enableDateSelection();
+            } else {
+                disableDateSelection();
+            }
+        });
+
+        // Form submission
+        document.getElementById('weatherForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
+            const locationInput = document.getElementById('locationInput').value.trim();
+            const pincodeInput = document.getElementById('pincodeInput').value.trim();
+            const date = document.getElementById('dateInput').value;
+            
+            if (!locationInput && !pincodeInput) {
+                errorDiv.textContent = '⚠️ Please enter a location or postal code';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Finding location...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                // First geocode the location (try postal code first, then city name)
+                currentLocation = await geocodeLocation(locationInput, pincodeInput);
+                
+                submitBtn.textContent = '🔄 Getting weather data...';
+                
+                // Then get weather prediction
+                const response = await fetch(
+                    `http://localhost:3002/api/predict?lat=${currentLocation.lat}&lon=${currentLocation.lon}&date=${date}`
+                );
+                
+                let data;
+                if (response.ok) {
+                    data = await response.json();
+                    data.location = currentLocation.name;
+                } else {
+                    throw new Error('Weather service unavailable');
+                }
+                
+                displayPrediction(data, date);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // If geocoding failed, try to set a default location
+                if (!currentLocation) {
+                    currentLocation = {
+                        lat: 40.7128,
+                        lon: -74.0060,
+                        name: locationInput || 'Unknown Location'
+                    };
+                }
+                
+                errorDiv.textContent = `⚠️ ${error.message} - Showing demo data`;
+                errorDiv.classList.remove('hidden');
+                
+                // Show demo data
+                const demoData = {
+                    location: currentLocation.name,
+                    date: date,
+                    verdict: "Uncertain",
+                    probability: 0.35,
+                    confidence: "medium",
+                    source: ["demo"],
+                    reasoning: "Demo data - weather service unavailable"
+                };
+                displayPrediction(demoData, date);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🌦️ Will It Rain?';
+            }
+        });
+
+        function createWeatherAnimation(verdict) {
+            const animationContainer = document.getElementById('weatherAnimation');
+            animationContainer.innerHTML = ''; // Clear previous animations
+            
+            if (verdict === 'rain') {
+                // Create rain animation
+                for (let i = 0; i < 50; i++) {
+                    const raindrop = document.createElement('div');
+                    raindrop.className = 'raindrop';
+                    raindrop.style.left = Math.random() * 100 + '%';
+                    raindrop.style.animationDelay = Math.random() * 1 + 's';
+                    raindrop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                    animationContainer.appendChild(raindrop);
+                }
+            } else if (verdict === 'no rain') {
+                // Create sun rays animation
+                for (let i = 0; i < 8; i++) {
+                    const sunRay = document.createElement('div');
+                    sunRay.className = 'sun-ray';
+                    sunRay.style.top = '20%';
+                    sunRay.style.left = '50%';
+                    sunRay.style.transform = `rotate(${i * 45}deg)`;
+                    sunRay.style.transformOrigin = '0 50%';
+                    sunRay.style.animationDelay = i * 0.2 + 's';
+                    animationContainer.appendChild(sunRay);
+                }
+            }
+            // No animation for 'uncertain' - keeps it clean
+        }
+
+        function displayPrediction(prediction, date) {
+            const card = document.getElementById('predictionCard');
+            const icon = document.getElementById('weatherIcon');
+            const location = document.getElementById('locationDisplay');
+            const dateDisplay = document.getElementById('dateDisplay');
+            const badge = document.getElementById('verdictBadge');
+            const probability = document.getElementById('probability');
+            const confidence = document.getElementById('confidence');
+            const progressFill = document.getElementById('progressFill');
+            const reasoning = document.getElementById('reasoning');
+            const details = document.getElementById('weatherDetails');
+
+            // Set weather icon and colors
+            const colors = {
+                'rain': '#2196f3',
+                'no rain': '#ff9800',
+                'uncertain': '#9e9e9e'
+            };
+            
+            const icons = {
+                'rain': '🌧️',
+                'no rain': '☀️',
+                'uncertain': '☁️'
+            };
+
+            const verdict = prediction.verdict.toLowerCase();
+            const color = colors[verdict] || colors.uncertain;
+            
+            // Create weather animation based on verdict
+            createWeatherAnimation(verdict);
+            
+            icon.textContent = icons[verdict] || icons.uncertain;
+            location.textContent = prediction.location;
+            dateDisplay.textContent = new Date(date).toLocaleDateString('en-US', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+            
+            badge.textContent = prediction.verdict.toUpperCase();
+            badge.style.backgroundColor = color;
+            
+            probability.textContent = `${Math.round(prediction.probability * 100)}%`;
+            confidence.textContent = `Confidence: ${prediction.confidence}`;
+            
+            progressFill.style.width = `${prediction.probability * 100}%`;
+            progressFill.style.backgroundColor = color;
+            
+            if (prediction.reasoning) {
+                reasoning.textContent = `💡 ${prediction.reasoning}`;
+            }
+
+            // Enhanced details with real weather information
+            const dailyData = prediction.details?.daily;
+            let detailsHTML = `
+                <div class="detail-item">
+                    <span>📊 Data Source:</span>
+                    <span>${prediction.source.join(', ').toUpperCase()}</span>
+                </div>
+                <div class="detail-item">
+                    <span>🎯 Prediction Confidence:</span>
+                    <span style="text-transform: capitalize; font-weight: bold;">${prediction.confidence}</span>
+                </div>
+                <div class="detail-item">
+                    <span>📅 Target Date:</span>
+                    <span>${new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+                </div>
+                <div class="detail-item">
+                    <span>📍 Coordinates:</span>
+                    <span>${currentLocation ? `${currentLocation.lat.toFixed(4)}°, ${currentLocation.lon.toFixed(4)}°` : 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <span>🌧️ Rain Probability:</span>
+                    <span style="font-weight: bold; color: ${color};">${Math.round(prediction.probability * 100)}%</span>
+                </div>
+                <div class="detail-item">
+                    <span>⏰ Forecast Horizon:</span>
+                    <span>${Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24))} days ahead</span>
+                </div>
+            `;
+            
+            // Add real weather data if available
+            if (dailyData) {
+                if (dailyData.temp) {
+                    detailsHTML += `
+                        <div class="detail-item">
+                            <span>🌡️ Temperature:</span>
+                            <span>${Math.round(dailyData.temp.day || dailyData.temp)}°C</span>
+                        </div>
+                    `;
+                }
+                if (dailyData.humidity) {
+                    detailsHTML += `
+                        <div class="detail-item">
+                            <span>💧 Humidity:</span>
+                            <span>${dailyData.humidity}%</span>
+                        </div>
+                    `;
+                }
+                if (dailyData.wind_speed) {
+                    detailsHTML += `
+                        <div class="detail-item">
+                            <span>💨 Wind Speed:</span>
+                            <span>${dailyData.wind_speed.toFixed(1)} m/s</span>
+                        </div>
+                    `;
+                }
+                if (dailyData.pressure) {
+                    detailsHTML += `
+                        <div class="detail-item">
+                            <span>🌪️ Pressure:</span>
+                            <span>${dailyData.pressure} hPa</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            details.innerHTML = detailsHTML;
+
+            // Show hourly data if available
+            displayHourlyForecast(prediction.details?.hourly || []);
+            
+            // Show weather metrics
+            displayWeatherMetrics(dailyData);
+            
+            // Show recommendations
+            displayRecommendations(prediction);
+            
+            // Store current prediction for AI recommendations
+            currentPrediction = prediction;
+            currentDate = date;
+            
+            // Check if user selected a sector in main form
+            const mainSector = document.getElementById('mainSectorSelect').value;
+            if (mainSector) {
+                // Auto-generate sector recommendations
+                generateSectorRecommendations(mainSector, prediction, date);
+            } else {
+                // Show AI recommendations section for manual selection
+                document.getElementById('aiRecommendations').classList.remove('hidden');
+            }
+            
+            // Show sector blocks and impact calculator
+            document.getElementById('agricultureBlock').style.display = 'block';
+            document.getElementById('logisticsBlock').style.display = 'block';
+            document.getElementById('constructionBlock').style.display = 'block';
+            document.getElementById('impactCalculator').style.display = 'block';
+            
+            // Enable AI recommendations if sector is selected
+            const sectorSelect = document.getElementById('sectorSelect');
+            const getAIBtn = document.getElementById('getAIRecommendations');
+            if (sectorSelect.value) {
+                getAIBtn.disabled = false;
+            }
+
+            card.classList.remove('hidden');
+        }
+        
+        function displayHourlyForecast(hourlyData) {
+            const hourlyDiv = document.getElementById('hourlyForecast');
+            const hourlyDataDiv = document.getElementById('hourlyData');
+            
+            if (hourlyData && hourlyData.length > 0) {
+                let hourlyHTML = '';
+                hourlyData.slice(0, 12).forEach(hour => {
+                    const time = new Date(hour.time).toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                    hourlyHTML += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #e5e7eb;">
+                            <span style="font-weight: 600;">${time}</span>
+                            <span>🌧️ ${Math.round((hour.pop || 0) * 100)}%</span>
+                            <span>🌡️ ${Math.round(hour.temp || 0)}°C</span>
+                            <span>💧 ${(hour.precipitation || 0).toFixed(1)}mm</span>
+                            <span>💨 ${hour.humidity || 0}%</span>
+                        </div>
+                    `;
+                });
+                hourlyDataDiv.innerHTML = hourlyHTML;
+                hourlyDiv.classList.remove('hidden');
+            } else {
+                hourlyDiv.classList.add('hidden');
+            }
+        }
+        
+        function displayWeatherMetrics(dailyData) {
+            const metricsDiv = document.getElementById('weatherMetrics');
+            const metricsGrid = document.getElementById('metricsGrid');
+            
+            if (!dailyData) {
+                metricsDiv.classList.add('hidden');
+                return;
+            }
+            
+            const metrics = {
+                '🌡️ Temperature': `${Math.round(dailyData.temp?.day || dailyData.temp || 20)}°C`,
+                '🌅 Morning': `${Math.round(dailyData.temp?.morn || (dailyData.temp || 20) - 5)}°C`,
+                '🌇 Evening': `${Math.round(dailyData.temp?.eve || (dailyData.temp || 20) - 2)}°C`,
+                '🌙 Night': `${Math.round(dailyData.temp?.night || (dailyData.temp || 20) - 8)}°C`,
+                '💨 Wind Speed': `${(dailyData.wind_speed || 0).toFixed(1)} m/s`,
+                '💧 Humidity': `${dailyData.humidity || 0}%`,
+                '☁️ Cloud Cover': `${dailyData.clouds || 0}%`,
+                '🌪️ Pressure': `${dailyData.pressure || 0} hPa`,
+                '🌡️ Feels Like': `${Math.round(dailyData.feels_like?.day || dailyData.temp || 20)}°C`,
+                '🌦️ Weather': dailyData.weather?.description || dailyData.weather?.main || 'N/A'
+            };
+            
+            if (dailyData.sunrise) {
+                metrics['🌅 Sunrise'] = new Date(dailyData.sunrise * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            }
+            if (dailyData.sunset) {
+                metrics['🌇 Sunset'] = new Date(dailyData.sunset * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            }
+            if (dailyData.visibility) {
+                metrics['👁️ Visibility'] = `${(dailyData.visibility / 1000).toFixed(1)} km`;
+            }
+            
+            let metricsHTML = '';
+            Object.entries(metrics).forEach(([key, value]) => {
+                metricsHTML += `
+                    <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">${key}</div>
+                        <div style="font-weight: bold; color: #374151;">${value}</div>
+                    </div>
+                `;
+            });
+            
+            metricsGrid.innerHTML = metricsHTML;
+            metricsDiv.classList.remove('hidden');
+        }
+        
+        function displayRecommendations(prediction) {
+            const recommendationsDiv = document.getElementById('recommendations');
+            const recommendationsList = document.getElementById('recommendationsList');
+            
+            const verdict = prediction.verdict.toLowerCase();
+            const probability = prediction.probability;
+            
+            let recommendations = [];
+            
+            if (verdict === 'rain' || probability > 0.6) {
+                recommendations = [
+                    '☂️ Carry an umbrella or raincoat',
+                    '👟 Wear waterproof shoes',
+                    '🚗 Allow extra travel time',
+                    '🏠 Plan indoor activities',
+                    '📱 Check weather updates regularly'
+                ];
+            } else if (verdict === 'uncertain' || (probability >= 0.3 && probability <= 0.6)) {
+                recommendations = [
+                    '🌂 Keep an umbrella handy',
+                    '👕 Dress in layers',
+                    '📱 Monitor weather updates',
+                    '🏃♂️ Have backup indoor plans',
+                    '☁️ Expect changing conditions'
+                ];
+            } else {
+                recommendations = [
+                    '☀️ Great day for outdoor activities',
+                    '🕶️ Don\'t forget sunglasses',
+                    '🧴 Apply sunscreen',
+                    '💧 Stay hydrated',
+                    '🌳 Perfect for walks or sports'
+                ];
+            }
+            
+            let recommendationsHTML = '';
+            recommendations.forEach(rec => {
+                recommendationsHTML += `
+                    <div style="background: #f0f9ff; border-left: 4px solid #0369a1; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 0.25rem;">
+                        ${rec}
+                    </div>
+                `;
+            });
+            
+            recommendationsList.innerHTML = recommendationsHTML;
+            recommendationsDiv.classList.remove('hidden');
+        }
+
+        // Sector tabs functionality
+        function showTab(sectorId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(sectorId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // AI Recommendations functionality
+        let currentPrediction = null;
+        let currentDate = null;
+
+        // Enable AI recommendations button when sector is selected
+        document.getElementById('sectorSelect').addEventListener('change', (e) => {
+            const getAIBtn = document.getElementById('getAIRecommendations');
+            if (e.target.value && currentPrediction) {
+                getAIBtn.disabled = false;
+            } else {
+                getAIBtn.disabled = true;
+            }
+        });
+
+        // Get AI recommendations
+        document.getElementById('getAIRecommendations').addEventListener('click', async () => {
+            const sector = document.getElementById('sectorSelect').value;
+            const getAIBtn = document.getElementById('getAIRecommendations');
+            const aiRecommendationsList = document.getElementById('aiRecommendationsList');
+            
+            if (!sector || !currentPrediction || !currentLocation) {
+                alert('Please select a sector and ensure weather prediction is available.');
+                return;
+            }
+            
+            getAIBtn.disabled = true;
+            getAIBtn.textContent = '🤖 Generating AI Recommendations...';
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/recommendations/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sector: sector,
+                        location: currentLocation.name,
+                        date: currentDate,
+                        weatherData: currentPrediction
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate recommendations');
+                }
+                
+                const data = await response.json();
+                displayAIRecommendations(data, sector);
+                
+            } catch (error) {
+                console.error('Error getting AI recommendations:', error);
+                aiRecommendationsList.innerHTML = `
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 1rem; color: #dc2626;">
+                        ⚠️ Unable to generate AI recommendations. Please check your Gemini API key configuration.
+                    </div>
+                `;
+            } finally {
+                getAIBtn.disabled = false;
+                getAIBtn.textContent = '🤖 Get AI Recommendations';
+            }
+        });
+
+        function displayAIRecommendations(data, sector) {
+            const aiRecommendationsList = document.getElementById('aiRecommendationsList');
+            
+            // Handle both old format (just recommendations array) and new format (with workStatus)
+            const recommendations = data.recommendations || data;
+            const workStatus = data.workStatus;
+            
+            if (!recommendations || recommendations.length === 0) {
+                aiRecommendationsList.innerHTML = `
+                    <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; color: #6b7280; text-align: center;">
+                        No specific recommendations available for this sector.
+                    </div>
+                `;
+                return;
+            }
+            
+            const sectorNames = {
+                agriculture: '🌾 Agriculture',
+                logistics: '🚚 Logistics & Transportation',
+                construction: '🏗️ Construction',
+                energy: '⚡ Energy & Utilities',
+                disaster: '🚑 Disaster Management',
+                tourism: '🏨 Tourism & Events',
+                industrial: '🏭 Industrial Operations',
+                water: '💧 Water Management'
+            };
+            
+            const priorityColors = {
+                high: '#dc2626',
+                medium: '#d97706',
+                low: '#059669'
+            };
+            
+            const timeframeIcons = {
+                immediate: '⚡',
+                today: '📅',
+                this_week: '📆'
+            };
+            
+            let html = `
+                <div style="background: #f0f9ff; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+                    <h4 style="color: #1e40af; margin-bottom: 0.5rem;">${sectorNames[sector]} Weather Advisory</h4>
+                    <p style="color: #6b7280; font-size: 0.875rem;">AI-powered recommendations based on weather conditions</p>
+                </div>
+            `;
+            
+            // Display work status if available
+            if (workStatus) {
+                const statusColor = workStatus.canWork ? '#059669' : '#dc2626';
+                const statusIcon = workStatus.canWork ? '✅' : '❌';
+                const rainLevelColors = {
+                    minimal: '#10b981',
+                    light: '#f59e0b', 
+                    moderate: '#ef4444',
+                    heavy: '#7c2d12'
+                };
+                
+                html += `
+                    <div style="background: ${workStatus.canWork ? '#f0fdf4' : '#fef2f2'}; border: 2px solid ${statusColor}; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                            <div style="font-size: 2rem;">${statusIcon}</div>
+                            <div>
+                                <h3 style="color: ${statusColor}; margin: 0; font-size: 1.25rem; font-weight: bold;">
+                                    ${workStatus.canWork ? 'SAFE TO WORK' : 'WORK NOT RECOMMENDED'}
+                                </h3>
+                                <p style="color: #6b7280; margin: 0; font-size: 0.875rem;">
+                                    ${workStatus.weatherCondition} • ${workStatus.rainLevel} rain level
+                                </p>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.7); border-radius: 0.5rem; padding: 1rem;">
+                            <p style="color: #374151; margin: 0; font-weight: 600; font-size: 1rem;">
+                                ${workStatus.advice}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Display actionable recommendations
+            html += `<h4 style="color: #374151; margin-bottom: 1rem; font-size: 1.1rem;">📋 Actionable Steps:</h4>`;
+            
+            recommendations.forEach((rec, index) => {
+                const priorityColor = priorityColors[rec.priority] || priorityColors.medium;
+                const timeframeIcon = timeframeIcons[rec.timeframe] || timeframeIcons.today;
+                
+                // Parse action text for emoji and content
+                const actionText = rec.description || rec.title;
+                const isPositive = actionText.includes('✅');
+                const isWarning = actionText.includes('⚠️');
+                const isNegative = actionText.includes('❌') || actionText.includes('🛡️');
+                
+                let borderColor = '#e5e7eb';
+                let backgroundColor = '#ffffff';
+                
+                if (isPositive) {
+                    borderColor = '#10b981';
+                    backgroundColor = '#f0fdf4';
+                } else if (isWarning) {
+                    borderColor = '#f59e0b';
+                    backgroundColor = '#fffbeb';
+                } else if (isNegative) {
+                    borderColor = '#ef4444';
+                    backgroundColor = '#fef2f2';
+                }
+                
+                html += `
+                    <div style="background: ${backgroundColor}; border-left: 4px solid ${borderColor}; border-radius: 0.5rem; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <h5 style="color: #374151; font-weight: 600; margin: 0; flex: 1; font-size: 1rem;">${rec.title}</h5>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span style="background: ${priorityColor}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                                    ${rec.priority}
+                                </span>
+                                <span style="color: #6b7280; font-size: 0.875rem;">
+                                    ${timeframeIcon} ${rec.timeframe ? rec.timeframe.replace('_', ' ') : 'today'}
+                                </span>
+                            </div>
+                        </div>
+                        <p style="color: #374151; margin: 0; line-height: 1.5; font-size: 0.95rem;">${actionText}</p>
+                    </div>
+                `;
+            });
+            
+            aiRecommendationsList.innerHTML = html;
+        }
+
+        // Sector-specific recommendation functions
+        async function getAgricultureRecommendations() {
+            if (!currentPrediction || !currentLocation) {
+                alert('Please get weather prediction first');
+                return;
+            }
+            
+            const cropType = document.getElementById('cropType').value;
+            const recDiv = document.getElementById('agricultureRecommendations');
+            recDiv.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6b7280;">Generating farming recommendations...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/recommendations/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sector: 'agriculture',
+                        location: currentLocation.name,
+                        date: currentDate,
+                        weatherData: currentPrediction,
+                        cropType: cropType
+                    })
+                });
+                
+                const data = await response.json();
+                displaySectorRecommendations(data, recDiv, 'agriculture', cropType);
+            } catch (error) {
+                recDiv.innerHTML = '<div style="color: #dc2626; padding: 1rem;">Unable to generate recommendations</div>';
+            }
+        }
+
+        async function getLogisticsRecommendations() {
+            if (!currentPrediction || !currentLocation) {
+                alert('Please get weather prediction first');
+                return;
+            }
+            
+            const destination = document.getElementById('destination').value;
+            const cargoType = document.getElementById('cargoType').value;
+            const recDiv = document.getElementById('logisticsRecommendations');
+            recDiv.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6b7280;">Generating logistics recommendations...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/recommendations/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sector: 'logistics',
+                        location: `${currentLocation.name} to ${destination || 'destination'}`,
+                        date: currentDate,
+                        weatherData: currentPrediction,
+                        cargoType: cargoType
+                    })
+                });
+                
+                const data = await response.json();
+                displaySectorRecommendations(data, recDiv, 'logistics', cargoType);
+            } catch (error) {
+                recDiv.innerHTML = '<div style="color: #dc2626; padding: 1rem;">Unable to generate recommendations</div>';
+            }
+        }
+
+        async function getConstructionRecommendations() {
+            if (!currentPrediction || !currentLocation) {
+                alert('Please get weather prediction first');
+                return;
+            }
+            
+            const endDate = document.getElementById('endDate').value;
+            const workType = document.getElementById('workType').value;
+            const recDiv = document.getElementById('constructionRecommendations');
+            recDiv.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6b7280;">Generating construction recommendations...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/recommendations/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sector: 'construction',
+                        location: currentLocation.name,
+                        date: currentDate,
+                        weatherData: currentPrediction,
+                        workType: workType,
+                        endDate: endDate
+                    })
+                });
+                
+                const data = await response.json();
+                displaySectorRecommendations(data, recDiv, 'construction', workType);
+            } catch (error) {
+                recDiv.innerHTML = '<div style="color: #dc2626; padding: 1rem;">Unable to generate recommendations</div>';
+            }
+        }
+
+        function displaySectorRecommendations(data, container, sector, extraInfo) {
+            const recommendations = data.recommendations || data;
+            const workStatus = data.workStatus;
+            
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 1rem; color: #6b7280;">No recommendations available</div>';
+                return;
+            }
+            
+            const priorityColors = { high: '#dc2626', medium: '#d97706', low: '#059669' };
+            const timeframeIcons = { immediate: '⚡', today: '📅', this_week: '📆' };
+            
+            let html = '';
+            
+            // Display work status if available
+            if (workStatus) {
+                const statusColor = workStatus.canWork ? '#059669' : '#dc2626';
+                const statusIcon = workStatus.canWork ? '✅' : '❌';
+                
+                html += `
+                    <div style="background: ${workStatus.canWork ? '#f0fdf4' : '#fef2f2'}; border: 2px solid ${statusColor}; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.5rem;">${statusIcon}</span>
+                            <h3 style="color: ${statusColor}; margin: 0; font-size: 1.1rem; font-weight: bold;">
+                                ${workStatus.canWork ? 'GOOD TO WORK' : 'WORK NOT RECOMMENDED'}
+                            </h3>
+                        </div>
+                        <p style="color: #374151; margin: 0; font-weight: 600; font-size: 0.9rem;">
+                            ${workStatus.advice}
+                        </p>
+                        <p style="color: #6b7280; margin: 0.5rem 0 0 0; font-size: 0.8rem;">
+                            ${workStatus.weatherCondition}
+                        </p>
+                    </div>
+                `;
+            }
+            
+            if (extraInfo) {
+                html += `<div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem;">
+                    <strong>Specific to:</strong> ${extraInfo.charAt(0).toUpperCase() + extraInfo.slice(1)}
+                </div>`;
+            }
+            
+            recommendations.forEach(rec => {
+                const priorityColor = priorityColors[rec.priority] || priorityColors.medium;
+                const timeframeIcon = timeframeIcons[rec.timeframe] || timeframeIcons.today;
+                
+                // Parse action text for styling
+                const actionText = rec.description || rec.title;
+                const isPositive = actionText.includes('✅');
+                const isWarning = actionText.includes('⚠️');
+                const isNegative = actionText.includes('❌') || actionText.includes('🛡️');
+                
+                let borderColor = '#e5e7eb';
+                let backgroundColor = '#ffffff';
+                
+                if (isPositive) {
+                    borderColor = '#10b981';
+                    backgroundColor = '#f0fdf4';
+                } else if (isWarning) {
+                    borderColor = '#f59e0b';
+                    backgroundColor = '#fffbeb';
+                } else if (isNegative) {
+                    borderColor = '#ef4444';
+                    backgroundColor = '#fef2f2';
+                }
+                
+                html += `
+                    <div style="background: ${backgroundColor}; border-left: 4px solid ${borderColor}; border-radius: 0.5rem; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <h4 style="color: #374151; font-weight: 600; margin: 0; flex: 1; font-size: 1rem;">${rec.title}</h4>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span style="background: ${priorityColor}; color: white; padding: 0.2rem 0.4rem; border-radius: 0.2rem; font-size: 0.7rem; font-weight: 600;">
+                                    ${rec.priority.toUpperCase()}
+                                </span>
+                                <span style="color: #6b7280; font-size: 0.8rem;">
+                                    ${timeframeIcon} ${rec.timeframe ? rec.timeframe.replace('_', ' ') : 'today'}
+                                </span>
+                            </div>
+                        </div>
+                        <p style="color: #374151; margin: 0; line-height: 1.4; font-size: 0.9rem;">${actionText}</p>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Auto-generate sector recommendations when sector is selected in main form
+        async function generateSectorRecommendations(sector, weatherData, date) {
+            const aiRecommendationsDiv = document.getElementById('aiRecommendations');
+            const aiRecommendationsList = document.getElementById('aiRecommendationsList');
+            
+            // Show the section
+            aiRecommendationsDiv.classList.remove('hidden');
+            
+            // Set the sector in the dropdown
+            document.getElementById('sectorSelect').value = sector;
+            
+            // Show loading state
+            aiRecommendationsList.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🔄</div>
+                    <p>Generating sector-specific recommendations...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/recommendations/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sector: sector,
+                        location: currentLocation.name,
+                        date: date,
+                        weatherData: weatherData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate recommendations');
+                }
+                
+                const data = await response.json();
+                displayAIRecommendations(data, sector);
+                
+            } catch (error) {
+                console.error('Error getting sector recommendations:', error);
+                aiRecommendationsList.innerHTML = `
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 1rem; color: #dc2626;">
+                        ⚠️ Unable to generate sector recommendations. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        // Impact Calculator
+        function calculateImpact() {
+            const industry = document.getElementById('impactIndustry').value;
+            const projectValue = parseFloat(document.getElementById('projectValue').value);
+            const riskLevel = document.getElementById('riskLevel').value;
+            const resultsDiv = document.getElementById('impactResults');
+            
+            if (!projectValue || projectValue < 100) {
+                resultsDiv.innerHTML = '<div style="color: #dc2626; padding: 1rem;">Please enter a valid project value</div>';
+                return;
+            }
+            
+            const riskPercentages = { low: 0.05, medium: 0.15, high: 0.30 };
+            const industryMultipliers = { agriculture: 1.2, logistics: 1.0, construction: 1.5, events: 0.8 };
+            
+            const riskAmount = projectValue * riskPercentages[riskLevel];
+            const weatherSavings = riskAmount * 0.7 * industryMultipliers[industry]; // 70% of risk can be mitigated
+            const annualSavings = weatherSavings * 4; // Assuming quarterly projects
+            
+            resultsDiv.innerHTML = `
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 1.5rem;">
+                    <h3 style="color: #15803d; margin-bottom: 1rem;">💰 Potential Savings Analysis</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #059669;">$${weatherSavings.toLocaleString()}</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">Per Project</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #059669;">$${annualSavings.toLocaleString()}</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">Annual Potential</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #059669;">${((weatherSavings/projectValue)*100).toFixed(1)}%</div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">Cost Reduction</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #ffffff; border-radius: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+                        <strong>How we calculate:</strong> Weather-informed decisions can prevent up to 70% of weather-related losses. 
+                        Calculations based on industry risk factors and historical data.
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 2rem; right: 2rem; z-index: 1000;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white; padding: 1rem 1.5rem; border-radius: 0.5rem;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Enhanced form submission with notifications
+        document.getElementById('weatherForm').addEventListener('submit', function(e) {
+            showNotification('🔍 Analyzing weather data...', 'info');
+        });
+
+        // Debug function for pincode testing
+        window.debugPincode = async function(pincode = '400001') {
+            console.log('=== DEBUG PINCODE ===');
+            console.log('Testing pincode:', pincode);
+            
+            try {
+                const url = `http://localhost:3002/api/geocode?postal_code=${pincode}`;
+                console.log('URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    console.log('✅ SUCCESS - Location found:', data.location.name);
+                    return data;
+                } else {
+                    console.log('❌ FAILED - No location found');
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ ERROR:', error);
+                return null;
+            }
+        };
+        
+        console.log('Debug function available: debugPincode("400001")');
+    </script>
+</body>
+</html>

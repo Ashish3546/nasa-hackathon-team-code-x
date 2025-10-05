@@ -1,0 +1,4 @@
+- [x] Install backend dependencies
+- [x] Install frontend dependencies
+- [x] Start backend server
+- [x] Start frontend server

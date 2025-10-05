@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logistics Weather Intelligence</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 3rem;
+            color: #0369a1;
+            margin-bottom: 1rem;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .route-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+            margin-bottom: 2rem;
+        }
+        .input {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .rec-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-left: 4px solid #0284c7;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .rec-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+        }
+        .rec-desc {
+            color: #374151;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+        .rec-meta {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .priority-high { background: #fef2f2; border-color: #ef4444; }
+        .priority-medium { background: #fefbf2; border-color: #f59e0b; }
+        .priority-low { background: #f0fdf4; border-color: #22c55e; }
+        .nav-back {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            color: #374151;
+            font-weight: 600;
+        }
+        .loading { text-align: center; color: #6b7280; padding: 2rem; }
+        .error { background: #fef2f2; color: #dc2626; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; }
+        .route-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .route-card {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="nav-back">← Back to Home</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🚚 Logistics Weather Intelligence</h1>
+            <p>Optimize your supply chain with weather-aware route planning and AI insights</p>
+        </div>
+
+        <div class="card">
+            <h2>Route Weather Analysis</h2>
+            <div class="route-form">
+                <input type="text" id="origin" class="input" placeholder="Origin city" required>
+                <input type="text" id="destination" class="input" placeholder="Destination city" required>
+                <input type="date" id="date" class="input" required>
+                <select id="cargoType" class="input">
+                    <option value="">Cargo type</option>
+                    <option value="general">General Freight</option>
+                    <option value="perishable">Perishable Goods</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="chemicals">Chemicals</option>
+                    <option value="construction">Construction Materials</option>
+                </select>
+                <button onclick="analyzeRoute()" class="btn">Analyze Route</button>
+            </div>
+            <div id="error" class="error" style="display: none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>🗺️ Route Weather Conditions</h2>
+            <div id="routeInfo" class="loading">Enter route details to see weather conditions along your path</div>
+        </div>
+
+        <div class="card">
+            <h2>🤖 Smart Logistics Recommendations</h2>
+            <div id="recommendations" class="loading">Analyze route first to get AI-powered logistics insights</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
+        async function analyzeRoute() {
+            const origin = document.getElementById('origin').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+            const date = document.getElementById('date').value;
+            const cargoType = document.getElementById('cargoType').value;
+            const errorDiv = document.getElementById('error');
+            
+            if (!origin || !destination || !date) {
+                errorDiv.textContent = 'Please enter origin, destination, and date';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            errorDiv.style.display = 'none';
+            document.getElementById('routeInfo').innerHTML = '<div class="loading">Analyzing route weather conditions...</div>';
+            document.getElementById('recommendations').innerHTML = '<div class="loading">Generating logistics recommendations...</div>';
+            
+            try {
+                // Geocode destination for weather data
+                let lat = 28.6139, lon = 77.2090; // Default
+                try {
+                    const geoResponse = await fetch(`http://localhost:3001/api/geocode?location_name=${encodeURIComponent(destination)}`);
+                    const geoData = await geoResponse.json();
+                    if (geoData.success) {
+                        lat = geoData.location.lat;
+                        lon = geoData.location.lon;
+                    }
+                } catch (geoError) {
+                    console.log('Geocoding failed, using default location');
+                }
+                
+                // Get weather data for destination
+                const weatherResponse = await fetch(`http://localhost:3001/api/predict?lat=${lat}&lon=${lon}&date=${date}`);
+                const weatherData = await weatherResponse.json();
+                
+                displayRouteInfo(weatherData, origin, destination, date);
+                
+                // Get AI recommendations
+                const recResponse = await fetch('http://localhost:3001/api/recommendations/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sector: 'logistics',
+                        location: `${origin} to ${destination}`,
+                        date: date,
+                        weatherData: weatherData,
+                        cargoType: cargoType
+                    })
+                });
+                
+                const recData = await recResponse.json();
+                displayLogisticsRecommendations(recData.recommendations, cargoType, origin, destination);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = 'Unable to analyze route. Please check if backend server is running.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function displayRouteInfo(weather, origin, destination, date) {
+            const routeDiv = document.getElementById('routeInfo');
+            const probability = Math.round(weather.probability * 100);
+            
+            routeDiv.innerHTML = `
+                <div class="route-info">
+                    <div class="route-card">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚩</div>
+                        <div><strong>Origin</strong></div>
+                        <div>${origin}</div>
+                    </div>
+                    <div class="route-card">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🏁</div>
+                        <div><strong>Destination</strong></div>
+                        <div>${destination}</div>
+                    </div>
+                    <div class="route-card">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${weather.verdict === 'Rain' ? '🌧️' : '☀️'}</div>
+                        <div><strong>Weather Forecast</strong></div>
+                        <div>${weather.verdict} (${probability}%)</div>
+                    </div>
+                    <div class="route-card">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📅</div>
+                        <div><strong>Travel Date</strong></div>
+                        <div>${new Date(date).toLocaleDateString()}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayLogisticsRecommendations(recommendations, cargoType, origin, destination) {
+            const recDiv = document.getElementById('recommendations');
+            
+            if (!recommendations || recommendations.length === 0) {
+                recDiv.innerHTML = '<div class="loading">No specific recommendations available</div>';
+                return;
+            }
+            
+            let html = '';
+            if (cargoType) {
+                html += `<div style="background: #e0f2fe; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <strong>Recommendations for ${cargoType.charAt(0).toUpperCase() + cargoType.slice(1)} Transport</strong><br>
+                    <span style="color: #6b7280;">Route: ${origin} → ${destination}</span>
+                </div>`;
+            }
+            
+            html += '<div class="recommendations">';
+            recommendations.forEach(rec => {
+                html += `
+                    <div class="rec-card priority-${rec.priority}">
+                        <div class="rec-title">${rec.title}</div>
+                        <div class="rec-desc">${rec.description}</div>
+                        <div class="rec-meta">
+                            <span style="background: ${getPriorityColor(rec.priority)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;">
+                                ${rec.priority.toUpperCase()}
+                            </span>
+                            <span style="color: #6b7280;">⏰ ${rec.timeframe.replace('_', ' ')}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            recDiv.innerHTML = html;
+        }
+
+        function getPriorityColor(priority) {
+            return priority === 'high' ? '#ef4444' : priority === 'medium' ? '#f59e0b' : '#22c55e';
+        }
+    </script>
+</body>
+</html>

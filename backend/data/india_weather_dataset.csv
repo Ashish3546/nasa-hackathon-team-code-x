@@ -1,0 +1,37 @@
+Date,Country,Region,Temperature,Rainfall,Humidity,WindSpeed,Lat,Lon,State
+2020-01-01,India,New Delhi,20.28,0,47.2,1.07,28.6139,77.209,Delhi
+2020-01-01,India,Mumbai,25.5,0.2,65.8,2.1,19.0760,72.8777,Maharashtra
+2020-01-01,India,Bangalore,22.3,0,58.4,1.8,12.9716,77.5946,Karnataka
+2020-01-01,India,Chennai,27.8,0.1,72.3,2.5,13.0827,80.2707,Tamil Nadu
+2020-01-01,India,Kolkata,23.1,0,61.2,1.5,22.5726,88.3639,West Bengal
+2020-01-01,India,Hyderabad,24.7,0,55.9,1.9,17.3850,78.4867,Telangana
+2020-04-15,India,New Delhi,38.5,0,35.2,2.8,28.6139,77.209,Delhi
+2020-04-15,India,Mumbai,34.2,0,58.7,3.1,19.0760,72.8777,Maharashtra
+2020-04-15,India,Bangalore,31.8,0,42.3,2.5,12.9716,77.5946,Karnataka
+2020-04-15,India,Chennai,36.9,0,65.4,3.8,13.0827,80.2707,Tamil Nadu
+2020-04-15,India,Kolkata,35.7,0,48.9,2.9,22.5726,88.3639,West Bengal
+2020-04-15,India,Hyderabad,37.2,0,38.7,3.2,17.3850,78.4867,Telangana
+2020-05-20,India,New Delhi,42.8,0,28.4,3.5,28.6139,77.209,Delhi
+2020-05-20,India,Mumbai,36.7,0,52.1,3.8,19.0760,72.8777,Maharashtra
+2020-05-20,India,Bangalore,33.2,0,38.9,2.8,12.9716,77.5946,Karnataka
+2020-05-20,India,Chennai,39.4,0,58.7,4.2,13.0827,80.2707,Tamil Nadu
+2020-05-20,India,Kolkata,38.9,0,42.3,3.4,22.5726,88.3639,West Bengal
+2020-05-20,India,Hyderabad,41.3,0,32.8,3.9,17.3850,78.4867,Telangana
+2020-06-15,India,New Delhi,40.2,2.5,68.4,3.2,28.6139,77.209,Delhi
+2020-06-15,India,Mumbai,32.8,15.7,85.2,4.1,19.0760,72.8777,Maharashtra
+2020-06-15,India,Bangalore,28.5,8.3,82.1,2.9,12.9716,77.5946,Karnataka
+2020-06-15,India,Chennai,37.1,12.4,78.7,3.8,13.0827,80.2707,Tamil Nadu
+2020-06-15,India,Kolkata,35.7,18.9,89.3,3.5,22.5726,88.3639,West Bengal
+2020-06-15,India,Hyderabad,36.4,6.2,72.8,3.1,17.3850,78.4867,Telangana
+2020-07-20,India,New Delhi,35.8,25.3,88.9,2.8,28.6139,77.209,Delhi
+2020-07-20,India,Mumbai,30.2,45.8,92.1,3.7,19.0760,72.8777,Maharashtra
+2020-07-20,India,Bangalore,26.1,22.7,89.4,2.4,12.9716,77.5946,Karnataka
+2020-07-20,India,Chennai,33.5,35.2,91.8,3.2,13.0827,80.2707,Tamil Nadu
+2020-07-20,India,Kolkata,32.9,38.4,93.7,2.9,22.5726,88.3639,West Bengal
+2020-07-20,India,Hyderabad,30.7,18.5,87.2,2.6,17.3850,78.4867,Telangana
+2020-12-25,India,New Delhi,15.3,0,42.8,0.9,28.6139,77.209,Delhi
+2020-12-25,India,Mumbai,26.7,0,58.3,1.8,19.0760,72.8777,Maharashtra
+2020-12-25,India,Bangalore,22.8,0,51.2,1.3,12.9716,77.5946,Karnataka
+2020-12-25,India,Chennai,28.4,0,64.7,2.1,13.0827,80.2707,Tamil Nadu
+2020-12-25,India,Kolkata,21.9,0,55.8,1.1,22.5726,88.3639,West Bengal
+2020-12-25,India,Hyderabad,24.2,0,49.6,1.5,17.3850,78.4867,Telangana
